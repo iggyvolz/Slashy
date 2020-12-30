@@ -1,0 +1,23 @@
+{
+  "require": {
+    "php": "^8.0",
+    "simplito/elliptic-php": "^1.0",
+    "amphp/http-server": "^2.1",
+    "ext-json": "*",
+    "netresearch/jsonmapper": "^1.4",
+    "amphp/http-client": "^4.5",
+    "jetbrains/phpstorm-attributes": "^1.0",
+    "monolog/monolog": "^2.2",
+    "restcord/restcord": "^0.5.0"
+  },
+  "require-dev": {
+    "phan/phan": "^4.0",
+    "vimeo/psalm": "^4.3",
+    "squizlabs/php_codesniffer": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "iggyvolz\\Slashy\\": "src/"
+    }
+  }
+}
