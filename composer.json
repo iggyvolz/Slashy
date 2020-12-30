@@ -1,4 +1,7 @@
 {
+  "name": "iggyvolz/slashy",
+  "description": "Implements Discord slash commands",
+  "license": "MIT",
   "require": {
     "php": "^8.0",
     "simplito/elliptic-php": "^1.0",
