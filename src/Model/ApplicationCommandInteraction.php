@@ -10,15 +10,26 @@ use iggyvolz\Slashy\Handler\CommandGroup;
 use iggyvolz\Slashy\Handler\Registerable;
 use ReflectionClass;
 use ReflectionNamedType;
+use RestCord\Model\Guild\GuildMember;
 use RuntimeException;
 
 class ApplicationCommandInteraction extends Interaction
 {
-    /**
-     * @var ApplicationCommandInteractionData
-     */
-    public ApplicationCommandInteractionData $data;
 
+    public function __construct(
+        int $id,
+        int $type,
+        int $guild_id,
+        int $channel_id,
+        GuildMember $member,
+        string $token,
+        int $version,
+        public ApplicationCommandInteractionData $data
+    ) {
+        parent::__construct(
+            $id, $type, $guild_id, $channel_id, $member, $token, $version
+        );
+    }
     /**
      * @var array<string,class-string<Registerable>>
      */

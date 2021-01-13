@@ -13,9 +13,7 @@ use Amp\Http\Status;
 use iggyvolz\Slashy\Handler\Command;
 use iggyvolz\Slashy\Handler\Registerable;
 use iggyvolz\Slashy\Model\Interaction;
-use iggyvolz\Slashy\Model\InteractionContainer;
 use iggyvolz\Slashy\Model\InteractionResponse;
-use JsonMapper;
 use LogicException;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -25,7 +23,6 @@ use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\HttpServer;
 use Amp\Http\Server\RequestHandler\CallableRequestHandler;
-use stdClass;
 use Throwable;
 
 use function Amp\call;
@@ -88,17 +85,11 @@ class Slashy
                 if (!$ok) {
                     return new Response(Status::UNAUTHORIZED, stringOrStream: "invalid request signature");
                 }
-                $mapper = new JsonMapper();
-                $mapper->classMap[Interaction::class] = fn(string $class, stdClass $data): string => Interaction::getInteractionType((array)$data);
                 /**
                  * @var mixed $body
                  */
-                $body = json_decode('{"interaction":' . ($body ?? "") . '}', flags: JSON_THROW_ON_ERROR);
-                if (!is_object($body)) {
-                    throw new LogicException();
-                }
-                $mapper->map($body, $interaction = new InteractionContainer());
-                $response = yield $interaction->handle();
+                $body = json_decode($body ?? "{}", associative: true, flags: JSON_THROW_ON_ERROR);
+                $response = yield Interaction::fromJson(self::assertAssocArray($body))->handle();
                 $encresponse = json_encode($response, flags: JSON_THROW_ON_ERROR);
                 if (!is_string($encresponse)) {
                     throw new LogicException();
@@ -157,5 +148,68 @@ class Slashy
             $ok = $ec->verify($msg, $signature, $this->publicKey);
             return $ok;
         });
+    }
+
+
+
+    // Utility functions:
+    public static function assertInt(mixed $val): int
+    {
+        if(!is_int($val)) {
+            throw new \TypeError("Expecting int, got " . get_debug_type($val));
+        }
+        return $val;
+    }
+
+    public static function assertString(mixed $val): string
+    {
+        if(!is_string($val)) {
+            throw new \TypeError("Expecting string, got " . get_debug_type($val));
+        }
+        return $val;
+    }
+
+    /**
+     * @param mixed $val
+     * @return array<string, mixed>
+     */
+    public static function assertAssocArray(mixed $val): array
+    {
+        if(!is_array($val)) {
+            throw new \TypeError("Expecting array, got " . get_debug_type($val));
+        }
+        foreach(array_keys($val) as $key) {
+            if(!is_string($key)) {
+                throw new \TypeError("Expecting associative array, got an integer key");
+            }
+        }
+        /**
+         * @var array<string,mixed> $val
+         */
+        return $val;
+    }
+
+    /**
+     * @param mixed $val
+     * @return array<string, mixed>|null
+     */
+    public static function assertAssocArrayOrNull(mixed $val): ?array
+    {
+        if(is_null($val)) {
+            return null;
+        }
+        return self::assertAssocArray($val);
+    }
+
+    /**
+     * @param mixed $val
+     * @return int|string|bool|null
+     */
+    public static function assertIntStringBoolNull(mixed $val): int|string|bool|null
+    {
+        if(is_int($val) || is_string($val) || is_bool($val) || is_null($val)) {
+            return $val;
+        }
+        throw new \TypeError("Expecting int|string|bool|null, got " . get_debug_type($val));
     }
 }
